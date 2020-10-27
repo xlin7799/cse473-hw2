@@ -1,24 +1,24 @@
 '''a2wp.py
-by Jack Lin and Vince xxx
-UWNetIDs: xlin7799,  xxx
-Student numbers: 1765328, and xxx
+by Nuo Chen and Jack Lin
+UWNetIDs: chenn24, xlin7799
+Student numbers: 1765107, and 1765328
 
 Assignment 2, in CSE 473, Autumn 2020.
 PART B
- 
+
 This file contains our problem formulation for the problem of
 reducing plastic waste.
 '''
 
 # Put your formulation of your chosen wicked problem here.
-# Be sure your name, uwnetid, and 7-digit student number are given above in 
+# Be sure your name, uwnetid, and 7-digit student number are given above in
 # the format shown.
 
 #<METADATA>
 SOLUZION_VERSION = "1.0"
 PROBLEM_NAME = "Reducing Plastic Waste"
 PROBLEM_VERSION = "1.0"
-PROBLEM_AUTHORS = ['Jack Lin', 'xxx']
+PROBLEM_AUTHORS = ['Nuo Chen', 'Jack Lin']
 PROBLEM_CREATION_DATE = "27-Oct-2020"
 
 # The following field is mainly for the human solver, via either the Text_SOLUZION_Client.
@@ -49,31 +49,33 @@ W(t) = d*DEMAND_CONSTANT - r*W(t-1)
 
 #<COMMON_CODE>
 DEMAND_CONSTANT = 381 # plastic demand in million tonnes
+RECYCLE_COST = 30     # Investment in Research for better recycling technology
+ADS_COST = 10         # Investment in educational propaganda that disencourages plastic consumption
 class State():
 
   def __init__(self, d=None):
-    if d==None: 
-      d = {'year':0,
-           'prev_recycled':0,
-           'd':0,
-           'r':0,
-           'new_waste':0,
-           'fund':0}
+    if d == None:
+      d = {'year': 0,
+           'prev_recycled': 0,
+           'd': 0,
+           'r': 0,
+           'new_waste': 0,
+           'fund': 0}
     self.d = d
 
   def __eq__(self,s2):
-    for prop in ['year','prev_recycled','d','r','new_waste']:
+    for prop in ['year', 'prev_recycled', 'd', 'r', 'new_waste', 'fund']:
       if self.d[prop] != s2.d[prop]: return False
     return True
 
   def __str__(self):
     # Produces a textual description of a state.
-    txt = "\n Year:"+str(self.d['year'])+"\n"
-    txt += " Total platic demand:"+str(self.d['d']*DEMAND_CONSTANT)+" million tonnes\n"
-    txt += " Plastic recycled from previous year:"+str(self.d['prev_recycled'])+"\n"
-    txt += " Recycling rate:"+str(self.d['r'])+"\n"
-    txt += " New plastic waste:"+str(self.d['new_waste'])+"\n"
-    txt += " Current fund remaining: $"+str(self.d['fund'])+"million\n"
+    txt = "\n Year:" + str(self.d['year']) + "\n"
+    txt += " Total platic demand:" + str(self.d['d'] * DEMAND_CONSTANT) + " million tonnes\n"
+    txt += " Plastic recycled from previous year:" + str(self.d['prev_recycled']) + "\n"
+    txt += " Recycling rate:" + str(self.d['r']) + "\n"
+    txt += " New plastic waste:" + str(self.d['new_waste']) + "\n"
+    txt += " Current fund remaining: $" + str(self.d['fund']) + "million\n"
     return txt
 
   def __hash__(self):
@@ -92,17 +94,46 @@ class State():
     return news
 
   def update_waste(self):
-    #computes the new waste generated
-    self.d['new_waste'] = self.d['d']*DEMAND_CONSTANT - self.d['prev_recycled']
-  
+    # computes the new waste generated
+    self.d['new_waste'] = self.d['d'] * DEMAND_CONSTANT - self.d['prev_recycled']
+
   def check_fund(self, exp):
-    #checks if current fund >= exp (expenditure)
+    # checks if current fund >= exp (expenditure)
     if self.d['fund'] >= exp:
       return True
     return False
 
+  def f_Recycle(self):
+    # print('Investing in Research for better recycling technology')
+    news = self.copy()
+    news.d['year'] += 1
+    news.d['fund'] -= RECYCLE_COST
+    news.d['r'] *= 1.3
+    news.d['prev_recycled'] = news.d['new_waste'] * news.d['r']
+    news.update_waste()
+    return news
+
+  def f_Ads(self):
+    # print('Investing in educational propaganda that disencourages plastic consumption')
+    news = self.copy()
+    news.d['year'] += 1
+    news.d['fund'] -= ADS_COST
+    news.d['d'] *= 0.8
+    news.d['prev_recycled'] = news.d['new_waste'] * news.d['r']
+    news.update_waste()
+    return news
+
+  def f_Skip(self):
+    # print('Doing nothing this year because of insufficient fund')
+    news = self.copy()
+    news.d['year'] += 1
+    news.d['fund'] += 50
+    news.d['prev_recycled'] = news.d['new_waste'] * news.d['r']
+    news.update_waste()
+    return news
+
 def goal_test(s):
-  s.d['new_waste'] <= 100
+  return s.d['new_waste'] <= 100
 
 def goal_message(s):
   return "Thanks for your effort! This year, there is less than 100 million tonnes of platic waste produced."
@@ -130,54 +161,21 @@ CREATE_INITIAL_STATE = lambda : State(d={'year':2020,
 #</INITIAL_STATE>
 
 #<OPERATORS>
-def f_Recycle(sd, params):
-  #print('Investing in Research for better recycling technology')
-  sd2=State()
-  sd2.copy(sd)
-  global RECYCLE_COST = 30
-  sd2.d['year'] += 1
-  sd2.d['fund'] -= RECYCLE_COST
-  sd2.d['r'] *= 1.3
-  sd2.d['prev_recycled'] = sd.d['new_waste'] * sd2.d['r']
-  sd2.update_waste()
-  return sd2
-
-def f_Ads(sd, params):
-  #print('Investing in educational propaganda that disencourages plastic consumption')
-  sd2=State()
-  sd2.copy(sd)
-  global ADS_COST = 10
-  sd2.d['year'] += 1
-  sd2.d['fund'] -= ADS_COST
-  sd2.d['d'] *= 0.8
-  sd2.d['prev_recycled'] = sd.d['new_waste'] * sd2.d['r']
-  sd2.update_waste()
-  return sd2
-
-def f_Skip(sd, params):
-  #print('Doing nothing this year because of insufficient fund')
-  sd2=State()
-  sd2.copy(sd)
-  sd2.d['year'] += 1
-  sd2.d['fund'] += 50
-  sd2.d['prev_recycled'] = sd.d['new_waste'] * sd2.d['r']
-  sd2.update_waste()
-  return sd2
 
 op1 = Operator(
   "Invest $"+str(RECYCLE_COST)+" million in developing better recycling technology" ,
   lambda s: s.check_fund(RECYCLE_COST),
-  f_Recycle)
+  lambda s: s.f_Recycle())
 
 op2 = Operator(
   "Invest $"+str(ADS_COST)+" million in distributing educational propaganda" ,
   lambda s: s.check_fund(ADS_COST),
-  f_Ads)
+  lambda s: s.f_Ads())
 
 op3 = Operator(
   "Do nothing" ,
   lambda s: s.check_fund(0),
-  f_Skip)
+  lambda s: s.f_Skip())
 
 OPERATORS = [op1, op2, op3]
 
