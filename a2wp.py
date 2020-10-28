@@ -36,7 +36,7 @@ Underlying principles:
    plastic can only be recycled once
 3) market demand of plastic = demand rate * DEMAND_CONSTANT
 
-Mathmatical formula:
+Mathematical formula:
 W(t) = d*DEMAND_CONSTANT - r*W(t-1)
 1) W(t): new platic waste produced at year t
 2) d: demand factor, total demand is a fraction of DEMAND_CONSTANT
@@ -49,7 +49,7 @@ W(t) = d*DEMAND_CONSTANT - r*W(t-1)
 
 #<COMMON_CODE>
 DEMAND_CONSTANT = 381 # plastic demand in million tonnes
-RECYCLE_COST = 30     # Investment in Research for better recycling technology
+RECYCLE_COST = 20     # Investment in Research for better recycling technology
 ADS_COST = 10         # Investment in educational propaganda that disencourages plastic consumption
 class State():
 
@@ -70,12 +70,12 @@ class State():
 
   def __str__(self):
     # Produces a textual description of a state.
-    txt = "\n Year:" + str(self.d['year']) + "\n"
-    txt += " Total platic demand:" + str(self.d['d'] * DEMAND_CONSTANT) + " million tonnes\n"
-    txt += " Plastic recycled from previous year:" + str(self.d['prev_recycled']) + "\n"
-    txt += " Recycling rate:" + str(self.d['r']) + "\n"
-    txt += " New plastic waste:" + str(self.d['new_waste']) + "\n"
-    txt += " Current fund remaining: $" + str(self.d['fund']) + "million\n"
+    txt = "\n Year: " + str(self.d['year']) + "\n"
+    txt += " Total platic demand: " + str(self.d['d'] * DEMAND_CONSTANT) + " million tonnes\n"
+    txt += " Plastic recycled from previous year: " + str(self.d['prev_recycled']) + "\n"
+    txt += " Recycling rate: " + str(self.d['r']) + "\n"
+    txt += " New plastic waste: " + str(self.d['new_waste']) + " million tonnes\n"
+    txt += " Current fund remaining: $" + str(self.d['fund']) + " million\n"
     return txt
 
   def __hash__(self):
@@ -108,7 +108,7 @@ class State():
     news = self.copy()
     news.d['year'] += 1
     news.d['fund'] -= RECYCLE_COST
-    news.d['r'] *= 1.3
+    news.d['r'] *= 1.4
     news.d['prev_recycled'] = news.d['new_waste'] * news.d['r']
     news.update_waste()
     return news
@@ -118,7 +118,7 @@ class State():
     news = self.copy()
     news.d['year'] += 1
     news.d['fund'] -= ADS_COST
-    news.d['d'] *= 0.8
+    news.d['d'] *= 0.7
     news.d['prev_recycled'] = news.d['new_waste'] * news.d['r']
     news.update_waste()
     return news
@@ -128,6 +128,7 @@ class State():
     news = self.copy()
     news.d['year'] += 1
     news.d['fund'] += 50
+    news.d['d'] = min(1, news.d['d']*1.1) # natural growth of demand
     news.d['prev_recycled'] = news.d['new_waste'] * news.d['r']
     news.update_waste()
     return news
@@ -173,7 +174,7 @@ op2 = Operator(
   lambda s: s.f_Ads())
 
 op3 = Operator(
-  "Do nothing" ,
+  "Do nothing to raise more fund ($50 millions)" ,
   lambda s: s.check_fund(0),
   lambda s: s.f_Skip())
 
@@ -188,8 +189,3 @@ GOAL_TEST = lambda s: goal_test(s)
 #<GOAL_MESSAGE_FUNCTION> (optional)
 GOAL_MESSAGE_FUNCTION = lambda s: goal_message(s)
 #</GOAL_MESSAGE_FUNCTION>
-
-
-
-
-
