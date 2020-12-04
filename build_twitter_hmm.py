@@ -7,18 +7,21 @@ def load_parameters(filename):
             param = json.loads(jsonObj)
             params.append(param)
     e = {}
-    s = []
-    o = []
+    s = ['N', 'O', 'S', '^', 'Z', 'L', 'M', 'V', 'A', 'R', '!', 'D',\
+     'P', '&', 'T', 'X', 'Y', '#', '@', '~', 'U', 'E', '$', ',', 'G']
+    o = {}
     trans = {}
     for param in params:
         prev = None
         for a, b in param:
             if a not in o:
-                o.append(a)
-            if b not in s:
-                s.append(b)
+                o[a] = 0
+            o[a] += 1
+            
+            if b not in e:
                 e[b] = {}
                 trans[b] = {}
+            
             if a not in e[b]:
                 e[b][a] = 0
             e[b][a] += 1
@@ -28,14 +31,11 @@ def load_parameters(filename):
                     trans[prev[1]][b] = 0
                 trans[prev[1]][b] += 1
             prev = [a, b]
-            
+    o = [k for k,v in sorted(o.items(), key = lambda item: item[1], reverse = True)]
     for state in e:
         n = sum(e[state].values())
-        for word in o:
-            if word in e[state]:
-                e[state][word] /= n
-            else:
-                e[state][word] = 0
+        for word in e[state]:
+            e[state][word] /= n
     for state in trans:
         n = sum(trans[state].values())
         for next_state in s:
@@ -43,10 +43,13 @@ def load_parameters(filename):
                 trans[state][next_state] /= n
             else:
                 trans[state][next_state] = 0
-    return e, s, trans
+    return s, o, trans, e
+
+def write_parameters(filename, s, o, trans, e):
+    with open(filename, 'w') as f:
+        json.dump({'S': s, 'O':o, 'P_trans':trans, 'P_emission': e}, f)
+        
 
 if __name__ == "__main__":
-    e,s,trans = load_parameters('twt.dev.json')
-    #print(s)
-    print(e['V']['watching'])
-    #print(trans['V'])
+    s, o, trans, e = load_parameters('twt.train.json')
+    write_parameters('twitter_pos_hmm.json',s,o,trans,e)
