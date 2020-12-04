@@ -47,7 +47,7 @@ def load_parameters(filename):
 
 def write_parameters(filename, s, o, trans, e):
     with open(filename, 'w') as f:
-        json.dump({'S': s, 'O':o, 'P_trans':trans, 'P_emission': e}, f)
+        json.dump({'S': s, 'O':o, 'P_trans':trans, 'P_emission': e}, f, indent=4, separators=(',', ': '))
         
 
 if __name__ == "__main__":
