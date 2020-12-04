@@ -93,7 +93,7 @@ class HMM:
                     hv.show_label_at_node(i+1,states[j], str(prob), dy=1.5*RAD, color='red')
                     hv.highlight_node(i+1, states[j], highlight=False)
             b.append(bt)
-        return bt
+        return b
 
     def viterbi_algorithm(self, obs_sequence, show=False):
         if show:
@@ -124,9 +124,9 @@ class HMM:
                 trans = [seqs[k][0]*self.P_trans[states[k]][states[j]] for k in range(n)]
                 ind = 0
                 prob = max(trans)
-                for i,e in enumerate(trans):
+                for k,e in enumerate(trans):
                     if e == prob:
-                        ind = i
+                        ind = k
                         break
                 
                 if obs_sequence[i] in self.P_emission[states[j]]:
@@ -137,9 +137,11 @@ class HMM:
                 best[1].append(states[j])
                 new_seqs.append(best)
             seqs = new_seqs
+        for i in range(n):
+            seqs[i][0] *= self.P_trans[states[i]]['<E>']
+
         seqs = sorted(seqs, key = lambda x: x[0])
         ret = seqs[-1][1]
-        #ret.append('<E>')
         if show:
             hv.highlight_edge(0, '<S>', ret[0])
             hv.highlight_node(1, ret[0])
@@ -148,11 +150,7 @@ class HMM:
                 hv.highlight_edge(i, ret[i-1], ret[i])
             hv.highlight_node(len(ret), '<E>')
             hv.highlight_edge(len(ret), ret[-1], '<E>')
-        ret.insert(0, '<S>')
-        ret.append('<E>')
         return ret
-        
-
 
 if __name__ == '__main__':
     sample_obs_seq = ['Jane', 'will', 'spot', 'Will']
