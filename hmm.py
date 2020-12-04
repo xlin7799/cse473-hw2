@@ -1,8 +1,8 @@
 """HMM_Algorithms.py
 
-by [Your name here]
+by Nuo Chen, Xin Lin
 
-date: [Your date here]
+date: 12/03/2020
 
 for CSE 473 Project Option 2, Autumn 2020
 University of Washington
@@ -60,8 +60,8 @@ class HMM:
             # highlight/unhighlight other nodes as appropriate
             # to show progress.
 
-        # Put your code implementing the Forward algorithm here. When 
-        # debugging, use calls to highlight_node and show_node_label to 
+        # Put your code implementing the Forward algorithm here. When
+        # debugging, use calls to highlight_node and show_node_label to
         # illustrate the progress of your algorithm.
         b = []
         states = self.S[1:-1]
@@ -69,10 +69,7 @@ class HMM:
         b1 = []
         for i in range(n):
             prob = self.P_trans['<S>'][states[i]]
-            if obs_sequence[0] in self.P_emission[states[i]]:
-                prob *= self.P_emission[states[i]][obs_sequence[0]]
-            else:
-                prob = 0.0
+            prob = self.getProb(prob, obs_sequence, states, 0, i)
             b1.append(prob)
             if show:
                 hv.highlight_node(1, states[i], highlight=True)
@@ -83,17 +80,25 @@ class HMM:
             bt = []
             for j in range(n):
                 prob = sum([b[-1][k]*self.P_trans[states[k]][states[j]] for k in range(n)])
-                if obs_sequence[i] in self.P_emission[states[j]]:
-                    prob *= self.P_emission[states[j]][obs_sequence[i]]
-                else:
-                    prob = 0.0
+                prob = self.getProb(prob, obs_sequence, states, i, j)
                 bt.append(prob)
                 if show:
                     hv.highlight_node(i+1, states[j], highlight=True)
                     hv.show_label_at_node(i+1,states[j], str(prob), dy=1.5*RAD, color='red')
                     hv.highlight_node(i+1, states[j], highlight=False)
             b.append(bt)
+        print(b)
         return b
+
+    def getProb(self, prob, obs_sequence, states, i, j):
+        contain = False
+        for k, v in self.P_emission[states[j]].items():
+            if obs_sequence[i].lower() == k.lower():
+                contain = True
+                prob *= v
+        if not contain:
+            return 0.0
+        return prob
 
     def viterbi_algorithm(self, obs_sequence, show=False):
         if show:
@@ -104,44 +109,37 @@ class HMM:
             # highlight other nodes and edges as appropriate
             # to show progress and results.
 
-        # Put your code implementing the Viterbi algorithm here. When 
-        # debugging, use calls to highlight_node and show_node_label to 
+        # Put your code implementing the Viterbi algorithm here. When
+        # debugging, use calls to highlight_node and show_node_label to
         # illustrate the progress of your algorithm.
         seqs = []
         states = self.S[1:-1]
         n = len(states)
         for i in range(n):
             prob = self.P_trans['<S>'][states[i]]
-            if obs_sequence[0] in self.P_emission[states[i]]:
-                prob *= self.P_emission[states[i]][obs_sequence[0]]
-            else:
-                prob = 0.0
+            prob = self.getProb(prob, obs_sequence, states, 0, i)
             seqs.append([prob, [states[i]]])
-            
+
         for i in range(1, len(obs_sequence)):
             new_seqs = []
             for j in range(n):
                 trans = [seqs[k][0]*self.P_trans[states[k]][states[j]] for k in range(n)]
                 ind = 0
                 prob = max(trans)
-                for k,e in enumerate(trans):
+                for idx,e in enumerate(trans):
                     if e == prob:
-                        ind = k
+                        ind = idx
                         break
-                
-                if obs_sequence[i] in self.P_emission[states[j]]:
-                    prob *= self.P_emission[states[j]][obs_sequence[i]]
-                else:
-                    prob = 0.0
+
+                prob = self.getProb(prob, obs_sequence, states, i, j)
                 best = [prob, seqs[ind][1].copy()]
                 best[1].append(states[j])
                 new_seqs.append(best)
             seqs = new_seqs
-        for i in range(n):
-            seqs[i][0] *= self.P_trans[states[i]]['<E>']
-
         seqs = sorted(seqs, key = lambda x: x[0])
+        print(seqs)
         ret = seqs[-1][1]
+        #ret.append('<E>')
         if show:
             hv.highlight_edge(0, '<S>', ret[0])
             hv.highlight_node(1, ret[0])
@@ -150,7 +148,11 @@ class HMM:
                 hv.highlight_edge(i, ret[i-1], ret[i])
             hv.highlight_node(len(ret), '<E>')
             hv.highlight_edge(len(ret), ret[-1], '<E>')
+        ret.insert(0, '<S>')
+        ret.append('<E>')
         return ret
+
+
 
 if __name__ == '__main__':
     sample_obs_seq = ['Jane', 'will', 'spot', 'Will']
@@ -159,4 +161,3 @@ if __name__ == '__main__':
     #hv.hold()
     state_seq = model.viterbi_algorithm(sample_obs_seq, show=True)
     hv.hold()
-
