@@ -45,7 +45,7 @@ def load_parameters(train_filename, test_filename):
         trans[prev[1]]['<E>'] += 1.0
 
     # laplace smoothing
-    af = 2.0
+    af = 1.0
     with open(test_filename, 'r') as f:
         for jsonObj in f:
             param = json.loads(jsonObj)
@@ -57,7 +57,7 @@ def load_parameters(train_filename, test_filename):
 
     o = [k for k, v in sorted(o.items(), key=lambda item: item[1], reverse=True)]
     for state in e:
-        n = sum(e[state].values()) + af * len(e[state].values())
+        n = sum(e[state].values()) + af * len(o)
         for word in e[state]:
             e[state][word] = (e[state][word] + af) / n
     for state in trans:
