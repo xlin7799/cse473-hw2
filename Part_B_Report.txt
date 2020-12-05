@@ -1,0 +1,13 @@
+1. Nuo Chen, Xin Lin
+2. Original HMM parameters:
+    a. Total count of correctly tagged words in the test data:  34896.0
+    b. Total count of words in the test data:  73523.0
+    c. Percentage correct (calculated from the previous two values):  47.46
+3. HMM parameters with Laplace smoothing:
+    a. Total count of correctly tagged words in the test data:  71221.0
+    b. Total count of words in the test data:  73523.0
+    c. Percentage correct (calculated from the previous two values):  96.87
+4. Something you learned doing this assignment:
+    It is very cool to use a model we created to predict the words type! We have a better understanding about the HMM model and a new method - laplace smoothing
+5. Biggest challenge you faced doing this assignment:
+    The biggest challenge is understanding the structure of existing code
